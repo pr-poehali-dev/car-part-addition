@@ -14,8 +14,10 @@ interface AnalysisResult {
 }
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<'upload' | 'history'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'history' | 'compare'>('upload');
   const [dragActive, setDragActive] = useState(false);
+  const [sourceImage, setSourceImage] = useState<string>('');
+  const [targetImage, setTargetImage] = useState<string>('');
   const [history, setHistory] = useState<AnalysisResult[]>([
     {
       id: '1',
@@ -123,6 +125,14 @@ const Index = () => {
             Загрузка
           </Button>
           <Button
+            variant={activeTab === 'compare' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('compare')}
+            className="flex items-center gap-2"
+          >
+            <Icon name="ArrowLeftRight" size={18} />
+            Перенос детали
+          </Button>
+          <Button
             variant={activeTab === 'history' ? 'default' : 'outline'}
             onClick={() => setActiveTab('history')}
             className="flex items-center gap-2"
@@ -207,6 +217,157 @@ const Index = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'compare' && (
+          <div className="animate-fade-in space-y-6">
+            <Card className="p-8">
+              <h2 className="text-2xl font-heading font-bold text-foreground mb-6">
+                Визуализация переноса детали
+              </h2>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-lg font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <Icon name="Car" size={20} className="text-primary" />
+                    Синее авто (исходное)
+                  </h3>
+                  <Card className="border-2 border-dashed border-primary/50 hover:border-primary transition-colors">
+                    {sourceImage ? (
+                      <div className="relative group">
+                        <img src={sourceImage} alt="Синее авто" className="w-full h-64 object-cover rounded" />
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setSourceImage('')}
+                        >
+                          <Icon name="X" size={16} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label htmlFor="source-input" className="cursor-pointer block p-12">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Icon name="Upload" size={32} className="text-primary" />
+                          </div>
+                          <p className="text-muted-foreground text-center">
+                            Загрузить фото синего авто
+                          </p>
+                        </div>
+                      </label>
+                    )}
+                  </Card>
+                  <input
+                    id="source-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => setSourceImage(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <Icon name="Car" size={20} className="text-secondary" />
+                    Красное авто (целевое)
+                  </h3>
+                  <Card className="border-2 border-dashed border-secondary/50 hover:border-secondary transition-colors">
+                    {targetImage ? (
+                      <div className="relative group">
+                        <img src={targetImage} alt="Красное авто" className="w-full h-64 object-cover rounded" />
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setTargetImage('')}
+                        >
+                          <Icon name="X" size={16} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label htmlFor="target-input" className="cursor-pointer block p-12">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center">
+                            <Icon name="Upload" size={32} className="text-secondary" />
+                          </div>
+                          <p className="text-muted-foreground text-center">
+                            Загрузить фото красного авто
+                          </p>
+                        </div>
+                      </label>
+                    )}
+                  </Card>
+                  <input
+                    id="target-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => setTargetImage(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {sourceImage && targetImage && (
+                <div className="mt-8 animate-fade-in">
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="h-px bg-border flex-1"></div>
+                    <span className="px-4 text-muted-foreground font-semibold">Результат</span>
+                    <div className="h-px bg-border flex-1"></div>
+                  </div>
+                  <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 p-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-3">До (красное авто)</p>
+                        <img src={targetImage} alt="До" className="w-full h-48 object-cover rounded-lg" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-foreground font-semibold mb-3 flex items-center gap-2">
+                          <Icon name="Sparkles" size={16} className="text-secondary" />
+                          После (с крышкой заднего сидения)
+                        </p>
+                        <div className="relative">
+                          <img src={targetImage} alt="После" className="w-full h-48 object-cover rounded-lg" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                            <div className="text-center">
+                              <Icon name="Wand2" size={32} className="text-secondary mx-auto mb-2" />
+                              <p className="text-white font-semibold">AI визуализация</p>
+                              <p className="text-white/70 text-sm">в разработке</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 p-4 bg-card rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <Icon name="Info" size={20} className="text-primary mt-0.5" />
+                        <div>
+                          <p className="text-foreground font-semibold mb-1">Информация о крышке</p>
+                          <p className="text-muted-foreground text-sm">
+                            На синем авто установлена крышка заднего сидения. Для установки такой же детали на красное авто 
+                            рекомендуется обратиться к специалистам для подбора совместимой модели.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              )}
+            </Card>
           </div>
         )}
 
