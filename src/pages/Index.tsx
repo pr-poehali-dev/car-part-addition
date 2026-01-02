@@ -155,9 +155,11 @@ const Index = () => {
                     Перетащите изображение сюда или выберите файл
                   </p>
                   <label htmlFor="file-input">
-                    <Button className="cursor-pointer">
-                      <Icon name="Upload" size={18} className="mr-2" />
-                      Выбрать файл
+                    <Button type="button" className="cursor-pointer" asChild>
+                      <span>
+                        <Icon name="Upload" size={18} className="mr-2" />
+                        Выбрать файл
+                      </span>
                     </Button>
                   </label>
                   <input
