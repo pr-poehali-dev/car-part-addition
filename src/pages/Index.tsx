@@ -18,6 +18,8 @@ const Index = () => {
   const [dragActive, setDragActive] = useState(false);
   const [sourceImage, setSourceImage] = useState<string>('');
   const [targetImage, setTargetImage] = useState<string>('');
+  const [resultImage, setResultImage] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [history, setHistory] = useState<AnalysisResult[]>([
     {
       id: '1',
@@ -96,6 +98,57 @@ const Index = () => {
       }, 2000);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleTransferPart = async () => {
+    if (!sourceImage || !targetImage) {
+      toast({
+        title: 'Ошибка',
+        description: 'Загрузите оба фото',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    setResultImage('');
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/e7dbcfc2-c295-4e79-9733-5927f003f74f', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sourceImage,
+          targetImage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResultImage(data.resultImage);
+        toast({
+          title: 'Готово!',
+          description: 'Деталь успешно перенесена на красное авто',
+        });
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Не удалось выполнить перенос',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Произошла ошибка при обработке',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -325,46 +378,60 @@ const Index = () => {
               {sourceImage && targetImage && (
                 <div className="mt-8 animate-fade-in">
                   <div className="flex items-center justify-center mb-6">
-                    <div className="h-px bg-border flex-1"></div>
-                    <span className="px-4 text-muted-foreground font-semibold">Результат</span>
-                    <div className="h-px bg-border flex-1"></div>
+                    <Button
+                      size="lg"
+                      onClick={handleTransferPart}
+                      disabled={isProcessing}
+                      className="gap-2"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Icon name="Loader2" size={20} className="animate-spin" />
+                          Обрабатываю...
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="Wand2" size={20} />
+                          Перенести крышку с помощью AI
+                        </>
+                      )}
+                    </Button>
                   </div>
-                  <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 p-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-3">До (красное авто)</p>
-                        <img src={targetImage} alt="До" className="w-full h-48 object-cover rounded-lg" />
+
+                  {resultImage && (
+                    <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 p-6 animate-fade-in">
+                      <div className="flex items-center justify-center mb-6">
+                        <div className="h-px bg-border flex-1"></div>
+                        <span className="px-4 text-foreground font-semibold">Результат</span>
+                        <div className="h-px bg-border flex-1"></div>
                       </div>
-                      <div>
-                        <p className="text-sm text-foreground font-semibold mb-3 flex items-center gap-2">
-                          <Icon name="Sparkles" size={16} className="text-secondary" />
-                          После (с крышкой заднего сидения)
-                        </p>
-                        <div className="relative">
-                          <img src={targetImage} alt="После" className="w-full h-48 object-cover rounded-lg" />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-                            <div className="text-center">
-                              <Icon name="Wand2" size={32} className="text-secondary mx-auto mb-2" />
-                              <p className="text-white font-semibold">AI визуализация</p>
-                              <p className="text-white/70 text-sm">в разработке</p>
-                            </div>
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-3">До (красное авто)</p>
+                          <img src={targetImage} alt="До" className="w-full h-64 object-cover rounded-lg" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-foreground font-semibold mb-3 flex items-center gap-2">
+                            <Icon name="Sparkles" size={16} className="text-secondary" />
+                            После (с крышкой заднего сидения)
+                          </p>
+                          <img src={resultImage} alt="После" className="w-full h-64 object-cover rounded-lg" />
+                        </div>
+                      </div>
+                      <div className="mt-6 p-4 bg-card rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <Icon name="CheckCircle" size={20} className="text-secondary mt-0.5" />
+                          <div>
+                            <p className="text-foreground font-semibold mb-1">AI визуализация готова!</p>
+                            <p className="text-muted-foreground text-sm">
+                              Так будет выглядеть красное авто с крышкой заднего сидения. Для установки реальной детали 
+                              рекомендуется обратиться к специалистам.
+                            </p>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="mt-6 p-4 bg-card rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <Icon name="Info" size={20} className="text-primary mt-0.5" />
-                        <div>
-                          <p className="text-foreground font-semibold mb-1">Информация о крышке</p>
-                          <p className="text-muted-foreground text-sm">
-                            На синем авто установлена крышка заднего сидения. Для установки такой же детали на красное авто 
-                            рекомендуется обратиться к специалистам для подбора совместимой модели.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  )}
                 </div>
               )}
             </Card>
